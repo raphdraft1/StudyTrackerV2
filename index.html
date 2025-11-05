@@ -52,6 +52,20 @@
     </div>
   </div>
 
+  <div id="total-container" class="dashboard" style="margin-bottom:20px;">
+  <h2 style="color:#38bdf8;">📊 Total Progress</h2>
+  <div class="bar">
+    <div class="bar-label">
+      <span>Overall Study Progress</span>
+      <span id="total-label">0/0 (0%)</span>
+    </div>
+    <div class="progress-bar">
+      <div id="total-progress" class="progress-fill"></div>
+    </div>
+  </div>
+</div>
+
+  
   <div id="dashboard" class="dashboard"></div>
 
   <script>
@@ -69,6 +83,31 @@
         dash.innerHTML = "<p style='text-align:center;opacity:0.8;'>No subjects yet. Add one above!</p>";
         return;
       }
+
+      function updateTotalProgress() {
+        const totalLabel = document.getElementById("total-label");
+        const totalFill = document.getElementById("total-progress");
+      
+        const totalSubjects = Object.keys(subjects).length;
+        if (totalSubjects === 0) {
+          totalLabel.textContent = "0/0 (0%)";
+          totalFill.style.width = "0%";
+          return;
+        }
+      
+        let totalProgress = 0;
+        let totalMax = 0;
+      
+        Object.values(subjects).forEach(s => {
+          totalProgress += s.progress;
+          totalMax += s.max;
+        });
+      
+        const percentage = totalMax > 0 ? (totalProgress / totalMax) * 100 : 0;
+        totalLabel.textContent = `${totalProgress}/${totalMax} (${percentage.toFixed(1)}%)`;
+        totalFill.style.width = `${percentage}%`;
+      }
+
 
       Object.entries(subjects).forEach(([key, val]) => {
         const { progress, max } = val;
