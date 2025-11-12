@@ -1,167 +1,401 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Study Progress Dashboard</title>
-  <style>
-    body {
-      font-family: "Poppins", sans-serif;
-      background-color: #0f172a;
-      color: #e2e8f0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 40px;
-    }
-    h1 { color: #38bdf8; margin-bottom: 20px; }
-    .dashboard, .input-panel {
-      width: 90%; max-width: 700px;
-      background: #1e293b; border-radius: 12px;
-      padding: 20px 30px; margin-bottom: 30px;
-      box-shadow: 0 0 15px rgba(56,189,248,0.2);
-    }
-    .bar { margin-bottom: 20px; }
-    .bar-label { display: flex; justify-content: space-between; margin-bottom: 6px; font-weight: 600; }
-    .progress-bar { position: relative; height: 25px; background: #334155; border-radius: 30px; overflow: hidden; }
-    .progress-fill { height: 100%; width: 0; background: linear-gradient(90deg, #f87171, #facc15, #4ade80); border-radius: 30px; transition: width 1s ease-in-out; }
-    .input-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 15px; }
-    input, select {
-      background: #334155; border: none; color: #e2e8f0;
-      padding: 6px 10px; border-radius: 6px;
-    }
-    button {
-      background: #38bdf8; border: none; color: #0f172a;
-      padding: 6px 14px; border-radius: 6px; cursor: pointer;
-      transition: 0.2s;
-    }
-    button:hover { background: #0ea5e9; }
-    .remove-btn { background: #ef4444; color: white; padding: 4px 10px; }
-    .remove-btn:hover { background: #dc2626; }
-  </style>
-</head>
-<body>
-  <h1>📘 Study Progress Dashboard</h1>
-
-  <div class="input-panel">
-    <h2 style="color:#38bdf8;">Add Subject</h2>
-    <div class="input-row">
-      <input type="text" id="subjectName" placeholder="Subject name" />
-      <input type="number" id="maxRange" placeholder="Max topics (e.g. 13)" min="1" />
-      <button onclick="addSubject()">Add</button>
-    </div>
-  </div>
-
-  <div id="total-container" class="dashboard" style="margin-bottom:20px;">
-  <h2 style="color:#38bdf8;">📊 Total Progress</h2>
-  <div class="bar">
-    <div class="bar-label">
-      <span>Overall Study Progress</span>
-      <span id="total-label">0/0 (0%)</span>
-    </div>
-    <div class="progress-bar">
-      <div id="total-progress" class="progress-fill"></div>
-    </div>
-  </div>
-</div>
-
-  
-  <div id="dashboard" class="dashboard"></div>
-
-  <script>
-    let subjects = JSON.parse(localStorage.getItem("subjects")) || {};
-
-    function saveData() {
-      localStorage.setItem("subjects", JSON.stringify(subjects));
-    }
-
-    function renderDashboard() {
-      const dash = document.getElementById("dashboard");
-      dash.innerHTML = "";
-
-      if (Object.keys(subjects).length === 0) {
-        dash.innerHTML = "<p style='text-align:center;opacity:0.8;'>No subjects yet. Add one above!</p>";
-        return;
-      }
-
-      function updateTotalProgress() {
-        const totalLabel = document.getElementById("total-label");
-        const totalFill = document.getElementById("total-progress");
-      
-        const totalSubjects = Object.keys(subjects).length;
-        if (totalSubjects === 0) {
-          totalLabel.textContent = "0/0 (0%)";
-          totalFill.style.width = "0%";
-          return;
-        }
-      
-        let totalProgress = 0;
-        let totalMax = 0;
-      
-        Object.values(subjects).forEach(s => {
-          totalProgress += s.progress;
-          totalMax += s.max;
-        });
-      
-        const percentage = totalMax > 0 ? (totalProgress / totalMax) * 100 : 0;
-        totalLabel.textContent = `${totalProgress}/${totalMax} (${percentage.toFixed(1)}%)`;
-        totalFill.style.width = `${percentage}%`;
-      }
-
-
-      Object.entries(subjects).forEach(([key, val]) => {
-        const { progress, max } = val;
-        const percentage = (progress / max) * 100;
-        const bar = document.createElement("div");
-        bar.className = "bar";
-        bar.innerHTML = `
-          <div class="bar-label">
-            <span>${key}</span>
-            <span>${progress}/${max} (${percentage.toFixed(1)}%)</span>
-          </div>
-          <div class="progress-bar">
-            <div class="progress-fill" style="width:${percentage}%;"></div>
-          </div>
-          <div class="input-row" style="margin-top:8px;">
-            <input type="number" id="update-${key}" value="${progress}" min="0" max="${max}" />
-            <button onclick="updateProgress('${key}')">Update</button>
-            <button class="remove-btn" onclick="removeSubject('${key}')">Remove</button>
-          </div>
-        `;
-        dash.appendChild(bar);
-      });
-      updateTotalProgress();
-    }
-
-    function addSubject() {
-      const name = document.getElementById("subjectName").value.trim();
-      const max = parseInt(document.getElementById("maxRange").value);
-      if (!name || isNaN(max) || max <= 0) return alert("Please enter a valid name and range.");
-      if (subjects[name]) return alert("Subject already exists!");
-      subjects[name] = { progress: 0, max: max };
-      saveData();
-      renderDashboard();
-      document.getElementById("subjectName").value = "";
-      document.getElementById("maxRange").value = "";
-    }
-
-    function updateProgress(name) {
-      const newValue = parseInt(document.getElementById(`update-${name}`).value);
-      if (isNaN(newValue) || newValue < 0 || newValue > subjects[name].max)
-        return alert(`Please enter a number between 0 and ${subjects[name].max}`);
-      subjects[name].progress = newValue;
-      saveData();
-      renderDashboard();
-    }
-
-    function removeSubject(name) {
-      delete subjects[name];
-      saveData();
-      renderDashboard();
-    }
-
-    // Initialize on load
-    document.addEventListener("DOMContentLoaded", renderDashboard);
-  </script>
-</body>
-</html>
+ <!DOCTYPE html>
+ <html lang="en">
+ <head>
+   <meta charset="UTF-8" />
+   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+   <title>Study Progress Dashboard</title>
+   <style>
++
+     body {
+       font-family: "Poppins", sans-serif;
+       background-color: #0f172a;
+       color: #e2e8f0;
+       display: flex;
+       flex-direction: column;
+       align-items: center;
+       padding: 40px;
+     }
+     h1 { color: #38bdf8; margin-bottom: 20px; }
+     .dashboard, .input-panel {
+       width: 90%; max-width: 700px;
+       background: #1e293b; border-radius: 12px;
+       padding: 20px 30px; margin-bottom: 30px;
+       box-shadow: 0 0 15px rgba(56,189,248,0.2);
+     }
+     .bar { margin-bottom: 20px; }
+-    .bar-label { display: flex; justify-content: space-between; margin-bottom: 6px; font-weight: 600; }
++    .bar-label {
++      display: flex;
++      justify-content: space-between;
++      gap: 10px;
++      margin-bottom: 6px;
++      font-weight: 600;
++      align-items: center;
++    }
++    .subject-meta {
++      display: flex;
++      align-items: center;
++      gap: 10px;
++    }
+     .progress-bar { position: relative; height: 25px; background: #334155; border-radius: 30px; overflow: hidden; }
+-    .progress-fill { height: 100%; width: 0; background: linear-gradient(90deg, #f87171, #facc15, #4ade80); border-radius: 30px; transition: width 1s ease-in-out; }
++    .progress-fill {
++      height: 100%;
++      width: 0;
++      background: linear-gradient(90deg, #f87171, #facc15, #4ade80);
++      border-radius: 30px;
++      transition: width 1s ease-in-out;
++    }
+     .input-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 15px; }
+     input, select {
+       background: #334155; border: none; color: #e2e8f0;
+       padding: 6px 10px; border-radius: 6px;
+     }
+     button {
+       background: #38bdf8; border: none; color: #0f172a;
+       padding: 6px 14px; border-radius: 6px; cursor: pointer;
+       transition: 0.2s;
+     }
+     button:hover { background: #0ea5e9; }
+     .remove-btn { background: #ef4444; color: white; padding: 4px 10px; }
+     .remove-btn:hover { background: #dc2626; }
+-  </style>
++    .toggle-btn {
++      background: rgba(56, 189, 248, 0.2);
++      color: #38bdf8;
++      border: 1px solid rgba(56, 189, 248, 0.4);
++      padding: 4px 12px;
++    }
++    .toggle-btn:hover { background: rgba(14, 165, 233, 0.3); }
++    .tasks-panel {
++      background: #0f172a;
++      border-radius: 10px;
++      padding: 15px;
++      margin-top: 12px;
++      border: 1px solid rgba(148, 163, 184, 0.2);
++    }
++    .hidden { display: none; }
++    .task-list {
++      list-style: none;
++      padding: 0;
++      margin: 0 0 12px 0;
++      display: flex;
++      flex-direction: column;
++      gap: 10px;
++    }
++    .task-item {
++      display: flex;
++      align-items: center;
++      gap: 10px;
++      flex: 1;
++    }
++    .task-text {
++      flex: 1;
++    }
++    .task-text.completed {
++      text-decoration: line-through;
++      color: #94a3b8;
++    }
++    .task-empty {
++      opacity: 0.7;
++      font-style: italic;
++    }
++    .task-actions {
++      display: flex;
++      gap: 10px;
++      align-items: center;
++      flex-wrap: wrap;
++    }
++</style>
+ </head>
+ <body>
+   <h1>📘 Study Progress Dashboard</h1>
+ 
+   <div class="input-panel">
+     <h2 style="color:#38bdf8;">Add Subject</h2>
+     <div class="input-row">
+       <input type="text" id="subjectName" placeholder="Subject name" />
+       <input type="number" id="maxRange" placeholder="Max topics (e.g. 13)" min="1" />
+       <button onclick="addSubject()">Add</button>
+     </div>
+   </div>
+ 
+   <div id="total-container" class="dashboard" style="margin-bottom:20px;">
+   <h2 style="color:#38bdf8;">📊 Total Progress</h2>
+   <div class="bar">
+     <div class="bar-label">
+       <span>Overall Study Progress</span>
+       <span id="total-label">0/0 (0%)</span>
+     </div>
+     <div class="progress-bar">
+       <div id="total-progress" class="progress-fill"></div>
+     </div>
+   </div>
+ </div>
+ 
+   
+   <div id="dashboard" class="dashboard"></div>
+ 
+   <script>
++
+     let subjects = JSON.parse(localStorage.getItem("subjects")) || {};
++    const openPanels = new Set();
+ 
+     function saveData() {
+       localStorage.setItem("subjects", JSON.stringify(subjects));
+     }
+ 
++    function getSafeId(name) {
++      const base = name.replace(/[^a-zA-Z0-9_-]/g, "_");
++      let hash = 0;
++      for (let i = 0; i < name.length; i += 1) {
++        hash = (hash << 5) - hash + name.charCodeAt(i);
++        hash |= 0;
++      }
++      return `${base}-${Math.abs(hash)}`;
++    }
++
++    function escapeHtml(value) {
++      return String(value)
++        .replace(/&/g, "&amp;")
++        .replace(/</g, "&lt;")
++        .replace(/>/g, "&gt;")
++        .replace(/"/g, "&quot;")
++        .replace(/'/g, "&#39;");
++    }
++
++    function ensureTaskArray(name) {
++      if (!subjects[name]) {
++        return false;
++      }
++      if (!Array.isArray(subjects[name].tasks)) {
++        subjects[name].tasks = [];
++      }
++      return true;
++    }
++
++    function updateTotalProgress() {
++      const totalLabel = document.getElementById("total-label");
++      const totalFill = document.getElementById("total-progress");
++
++      const totalSubjects = Object.keys(subjects).length;
++      if (totalSubjects === 0) {
++        totalLabel.textContent = "0/0 (0%)";
++        totalFill.style.width = "0%";
++        return;
++      }
++
++      let totalProgress = 0;
++      let totalMax = 0;
++
++      Object.values(subjects).forEach((s) => {
++        totalProgress += s.progress;
++        totalMax += s.max;
++      });
++
++      const percentage = totalMax > 0 ? (totalProgress / totalMax) * 100 : 0;
++      totalLabel.textContent = `${totalProgress}/${totalMax} (${percentage.toFixed(1)}%)`;
++      totalFill.style.width = `${percentage}%`;
++    }
++
+     function renderDashboard() {
+       const dash = document.getElementById("dashboard");
+       dash.innerHTML = "";
+ 
++      for (const subjectName of Array.from(openPanels)) {
++        if (!subjects[subjectName]) {
++          openPanels.delete(subjectName);
++        }
++      }
++
+       if (Object.keys(subjects).length === 0) {
+         dash.innerHTML = "<p style='text-align:center;opacity:0.8;'>No subjects yet. Add one above!</p>";
++        updateTotalProgress();
+         return;
+       }
+ 
+-      function updateTotalProgress() {
+-        const totalLabel = document.getElementById("total-label");
+-        const totalFill = document.getElementById("total-progress");
+-      
+-        const totalSubjects = Object.keys(subjects).length;
+-        if (totalSubjects === 0) {
+-          totalLabel.textContent = "0/0 (0%)";
+-          totalFill.style.width = "0%";
+-          return;
+-        }
+-      
+-        let totalProgress = 0;
+-        let totalMax = 0;
+-      
+-        Object.values(subjects).forEach(s => {
+-          totalProgress += s.progress;
+-          totalMax += s.max;
+-        });
+-      
+-        const percentage = totalMax > 0 ? (totalProgress / totalMax) * 100 : 0;
+-        totalLabel.textContent = `${totalProgress}/${totalMax} (${percentage.toFixed(1)}%)`;
+-        totalFill.style.width = `${percentage}%`;
+-      }
+-
+-
+       Object.entries(subjects).forEach(([key, val]) => {
+-        const { progress, max } = val;
+-        const percentage = (progress / max) * 100;
++        if (!Array.isArray(val.tasks)) {
++          val.tasks = [];
++        }
++        const { progress, max, tasks } = val;
++        const safeId = getSafeId(key);
++        const isOpen = openPanels.has(key);
++        const safeMax = max > 0 ? max : 0;
++        const boundedProgress = safeMax > 0 ? Math.min(progress, safeMax) : progress;
++        const percentage = safeMax > 0 ? (boundedProgress / safeMax) * 100 : 0;
+         const bar = document.createElement("div");
+         bar.className = "bar";
++
++        const tasksHtml = tasks.length
++          ? tasks
++              .map(
++                (task, idx) => `
++            <li>
++              <div class="task-actions">
++                <label class="task-item">
++                  <input type="checkbox" ${task.done ? "checked" : ""} onchange="toggleTask(${JSON.stringify(
++                    key
++                  )}, ${idx})" />
++                  <span class="task-text ${task.done ? "completed" : ""}">${escapeHtml(task.text)}</span>
++                </label>
++                <button class="remove-btn" onclick="removeTask(${JSON.stringify(key)}, ${idx})">Delete</button>
++              </div>
++            </li>
++          `
++              )
++              .join("")
++          : '<li class="task-empty">No tasks yet.</li>';
++
+         bar.innerHTML = `
+           <div class="bar-label">
+-            <span>${key}</span>
+-            <span>${progress}/${max} (${percentage.toFixed(1)}%)</span>
++            <span>${escapeHtml(key)}</span>
++            <div class="subject-meta">
++              <span>${progress}/${max} (${percentage.toFixed(1)}%)</span>
++              <button class="toggle-btn" data-subject="${safeId}" onclick="toggleTasks(${JSON.stringify(
++                key
++              )})">${isOpen ? "Hide Tasks ▲" : "Show Tasks ▼"}</button>
++            </div>
+           </div>
+           <div class="progress-bar">
+             <div class="progress-fill" style="width:${percentage}%;"></div>
+           </div>
+           <div class="input-row" style="margin-top:8px;">
+-            <input type="number" id="update-${key}" value="${progress}" min="0" max="${max}" />
+-            <button onclick="updateProgress('${key}')">Update</button>
+-            <button class="remove-btn" onclick="removeSubject('${key}')">Remove</button>
++            <input type="number" id="update-${safeId}" value="${progress}" min="0" max="${max}" />
++            <button onclick="updateProgress(${JSON.stringify(key)})">Update</button>
++            <button class="remove-btn" onclick="removeSubject(${JSON.stringify(key)})">Remove</button>
++          </div>
++          <div id="tasks-${safeId}" class="tasks-panel ${isOpen ? "" : "hidden"}">
++            <ul class="task-list">
++              ${tasksHtml}
++            </ul>
++            <div class="input-row">
++              <input type="text" id="task-input-${safeId}" placeholder="New task" />
++              <button onclick="addTask(${JSON.stringify(key)})">Add Task</button>
++            </div>
+           </div>
+         `;
++
+         dash.appendChild(bar);
+       });
++
+       updateTotalProgress();
+     }
+ 
+     function addSubject() {
+       const name = document.getElementById("subjectName").value.trim();
+-      const max = parseInt(document.getElementById("maxRange").value);
++      const max = parseInt(document.getElementById("maxRange").value, 10);
+       if (!name || isNaN(max) || max <= 0) return alert("Please enter a valid name and range.");
+       if (subjects[name]) return alert("Subject already exists!");
+-      subjects[name] = { progress: 0, max: max };
++      subjects[name] = { progress: 0, max: max, tasks: [] };
+       saveData();
+       renderDashboard();
+       document.getElementById("subjectName").value = "";
+       document.getElementById("maxRange").value = "";
+     }
+ 
+     function updateProgress(name) {
+-      const newValue = parseInt(document.getElementById(`update-${name}`).value);
++      const input = document.getElementById(`update-${getSafeId(name)}`);
++      if (!input || !subjects[name]) return;
++      const newValue = parseInt(input.value, 10);
+       if (isNaN(newValue) || newValue < 0 || newValue > subjects[name].max)
+         return alert(`Please enter a number between 0 and ${subjects[name].max}`);
+       subjects[name].progress = newValue;
+       saveData();
+       renderDashboard();
+     }
+ 
+     function removeSubject(name) {
+       delete subjects[name];
++      openPanels.delete(name);
++      saveData();
++      renderDashboard();
++    }
++
++    function toggleTasks(name) {
++      const safeId = getSafeId(name);
++      const panel = document.getElementById(`tasks-${safeId}`);
++      const button = document.querySelector(`button[data-subject="${safeId}"]`);
++      if (!panel || !button) return;
++      const isHidden = panel.classList.toggle("hidden");
++      if (isHidden) {
++        openPanels.delete(name);
++        button.textContent = "Show Tasks ▼";
++      } else {
++        openPanels.add(name);
++        button.textContent = "Hide Tasks ▲";
++      }
++    }
++
++    function addTask(name) {
++      const safeId = getSafeId(name);
++      const input = document.getElementById(`task-input-${safeId}`);
++      if (!input) return;
++      const value = input.value.trim();
++      if (!value) return alert("Please enter a task description.");
++      if (!ensureTaskArray(name)) return;
++      subjects[name].tasks.push({ text: value, done: false });
++      input.value = "";
++      openPanels.add(name);
++      saveData();
++      renderDashboard();
++    }
++
++    function toggleTask(name, index) {
++      if (!ensureTaskArray(name)) return;
++      const task = subjects[name].tasks[index];
++      if (!task) return;
++      task.done = !task.done;
++      openPanels.add(name);
++      saveData();
++      renderDashboard();
++    }
++
++    function removeTask(name, index) {
++      if (!ensureTaskArray(name)) return;
++      subjects[name].tasks.splice(index, 1);
++      openPanels.add(name);
+       saveData();
+       renderDashboard();
+     }
+ 
+     // Initialize on load
+     document.addEventListener("DOMContentLoaded", renderDashboard);
+   </script>
+ </body>
+ </html>
