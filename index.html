@@ -245,36 +245,33 @@ function renderDashboard() {
         <div class="progress-fill" style="width:${percentage}%;"></div>
       </div>
       <div class="input-row" style="margin-top:8px;">
-        <input type="number" id="update-${name}" value="${progress}" min="0" max="${max}" />
-        <button class="update-btn" data-name="${name}">Update</button>
-        <button class="remove-btn" data-name="${name}">Remove</button>
+        <input type="number" class="progress-input" value="${progress}" min="0" max="${max}" />
+        <button class="update-btn">Update</button>
+        <button class="remove-btn">Remove</button>
       </div>
     `;
-    dash.appendChild(bar);
-  });
 
-  // Rebind all button events after re-render
-  document.querySelectorAll(".update-btn").forEach((btn) => {
-    btn.onclick = () => {
-      const name = btn.dataset.name;
-      const input = document.getElementById(`update-${name}`);
+    const input = bar.querySelector(".progress-input");
+    const updateBtn = bar.querySelector(".update-btn");
+    const removeBtn = bar.querySelector(".remove-btn");
+
+    updateBtn.addEventListener("click", () => {
       const newValue = parseInt(input.value, 10);
-      if (isNaN(newValue) || newValue < 0 || newValue > subjects[name].max) {
-        return alert(`Please enter a number between 0 and ${subjects[name].max}`);
+      if (isNaN(newValue) || newValue < 0 || newValue > max) {
+        return alert(`Please enter a number between 0 and ${max}`);
       }
       subjects[name].progress = newValue;
       saveData();
       renderDashboard();
-    };
-  });
+    });
 
-  document.querySelectorAll(".remove-btn").forEach((btn) => {
-    btn.onclick = () => {
-      const name = btn.dataset.name;
+    removeBtn.addEventListener("click", () => {
       delete subjects[name];
       saveData();
       renderDashboard();
-    };
+    });
+
+    dash.appendChild(bar);
   });
 
   updateTotalProgress();
