@@ -193,212 +193,107 @@
 
   <div id="dashboard" class="dashboard"></div>
 
-  <script>
-    let subjects = JSON.parse(localStorage.getItem("subjects")) || {};
-    const openPanels = new Set();
+<script>
+let subjects = JSON.parse(localStorage.getItem("subjects")) || {};
+const openPanels = new Set();
 
-    function saveData() {
-      localStorage.setItem("subjects", JSON.stringify(subjects));
-    }
+function saveData() {
+  localStorage.setItem("subjects", JSON.stringify(subjects));
+}
 
-    function getSafeId(name) {
-      const base = name.replace(/[^a-zA-Z0-9_-]/g, "_");
-      let hash = 0;
-      for (let i = 0; i < name.length; i += 1) {
-        hash = (hash << 5) - hash + name.charCodeAt(i);
-        hash |= 0;
-      }
-      return `${base}-${Math.abs(hash)}`;
-    }
+function updateTotalProgress() {
+  const totalLabel = document.getElementById("total-label");
+  const totalFill = document.getElementById("total-progress");
+  const totalSubjects = Object.keys(subjects).length;
+  if (totalSubjects === 0) {
+    totalLabel.textContent = "0/0 (0%)";
+    totalFill.style.width = "0%";
+    return;
+  }
+  let totalProgress = 0, totalMax = 0;
+  Object.values(subjects).forEach((s) => {
+    totalProgress += s.progress;
+    totalMax += s.max;
+  });
+  const percentage = totalMax > 0 ? (totalProgress / totalMax) * 100 : 0;
+  totalLabel.textContent = `${totalProgress}/${totalMax} (${percentage.toFixed(1)}%)`;
+  totalFill.style.width = `${percentage}%`;
+}
 
-    function escapeHtml(value) {
-      return String(value)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#39;");
-    }
+function renderDashboard() {
+  const dash = document.getElementById("dashboard");
+  dash.innerHTML = "";
 
-    function ensureTaskArray(name) {
-      if (!subjects[name]) return false;
-      if (!Array.isArray(subjects[name].tasks)) subjects[name].tasks = [];
-      return true;
-    }
+  if (Object.keys(subjects).length === 0) {
+    dash.innerHTML = "<p style='text-align:center;opacity:0.8;'>No subjects yet. Add one above!</p>";
+    updateTotalProgress();
+    return;
+  }
 
-    function updateTotalProgress() {
-      const totalLabel = document.getElementById("total-label");
-      const totalFill = document.getElementById("total-progress");
-      const totalSubjects = Object.keys(subjects).length;
-      if (totalSubjects === 0) {
-        totalLabel.textContent = "0/0 (0%)";
-        totalFill.style.width = "0%";
-        return;
-      }
+  Object.entries(subjects).forEach(([name, val]) => {
+    const { progress, max } = val;
+    const percentage = max > 0 ? (progress / max) * 100 : 0;
 
-      let totalProgress = 0;
-      let totalMax = 0;
+    const bar = document.createElement("div");
+    bar.className = "bar";
+    bar.innerHTML = `
+      <div class="bar-label">
+        <span>${name}</span>
+        <span>${progress}/${max} (${percentage.toFixed(1)}%)</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" style="width:${percentage}%;"></div>
+      </div>
+      <div class="input-row" style="margin-top:8px;">
+        <input type="number" id="update-${name}" value="${progress}" min="0" max="${max}" />
+        <button class="update-btn" data-name="${name}">Update</button>
+        <button class="remove-btn" data-name="${name}">Remove</button>
+      </div>
+    `;
+    dash.appendChild(bar);
+  });
 
-      Object.values(subjects).forEach((s) => {
-        totalProgress += s.progress;
-        totalMax += s.max;
-      });
-
-      const percentage = totalMax > 0 ? (totalProgress / totalMax) * 100 : 0;
-      totalLabel.textContent = `${totalProgress}/${totalMax} (${percentage.toFixed(1)}%)`;
-      totalFill.style.width = `${percentage}%`;
-    }
-
-    function renderDashboard() {
-      const dash = document.getElementById("dashboard");
-      dash.innerHTML = "";
-
-      for (const subjectName of Array.from(openPanels)) {
-        if (!subjects[subjectName]) openPanels.delete(subjectName);
-      }
-
-      if (Object.keys(subjects).length === 0) {
-        dash.innerHTML = "<p style='text-align:center;opacity:0.8;'>No subjects yet. Add one above!</p>";
-        updateTotalProgress();
-        return;
-      }
-
-      Object.entries(subjects).forEach(([key, val]) => {
-        if (!Array.isArray(val.tasks)) val.tasks = [];
-        const { progress, max, tasks } = val;
-        const safeId = getSafeId(key);
-        const isOpen = openPanels.has(key);
-        const safeMax = max > 0 ? max : 0;
-        const boundedProgress = safeMax > 0 ? Math.min(progress, safeMax) : progress;
-        const percentage = safeMax > 0 ? (boundedProgress / safeMax) * 100 : 0;
-        const bar = document.createElement("div");
-        bar.className = "bar";
-
-        const tasksHtml = tasks.length
-          ? tasks.map((task, idx) => `
-            <li>
-              <div class="task-actions">
-                <label class="task-item">
-                  <input type="checkbox" ${task.done ? "checked" : ""} onchange="toggleTask(${JSON.stringify(key)}, ${idx})" />
-                  <span class="task-text ${task.done ? "completed" : ""}">${escapeHtml(task.text)}</span>
-                </label>
-                <button class="remove-btn" onclick="removeTask(${JSON.stringify(key)}, ${idx})">Delete</button>
-              </div>
-            </li>
-          `).join("")
-          : '<li class="task-empty">No tasks yet.</li>';
-
-        bar.innerHTML = `
-          <div class="bar-label">
-            <span>${escapeHtml(key)}</span>
-            <div class="subject-meta">
-              <span>${progress}/${max} (${percentage.toFixed(1)}%)</span>
-              <button class="toggle-btn" data-subject="${safeId}" onclick="toggleTasks(${JSON.stringify(key)})">
-                ${isOpen ? "Hide Tasks ▲" : "Show Tasks ▼"}
-              </button>
-            </div>
-          </div>
-          <div class="progress-bar">
-            <div class="progress-fill" style="width:${percentage}%;"></div>
-          </div>
-          <div class="input-row" style="margin-top:8px;">
-            <input type="number" id="update-${safeId}" value="${progress}" min="0" max="${max}" />
-            <button onclick="updateProgress(${JSON.stringify(key)})">Update</button>
-            <button class="remove-btn" onclick="removeSubject(${JSON.stringify(key)})">Remove</button>
-          </div>
-          <div id="tasks-${safeId}" class="tasks-panel ${isOpen ? "" : "hidden"}">
-            <ul class="task-list">${tasksHtml}</ul>
-            <div class="input-row">
-              <input type="text" id="task-input-${safeId}" placeholder="New task" />
-              <button onclick="addTask(${JSON.stringify(key)})">Add Task</button>
-            </div>
-          </div>
-        `;
-
-        dash.appendChild(bar);
-      });
-
-      updateTotalProgress();
-    }
-
-    function addSubject() {
-      const name = document.getElementById("subjectName").value.trim();
-      const max = parseInt(document.getElementById("maxRange").value, 10);
-      if (!name || isNaN(max) || max <= 0) return alert("Please enter a valid name and range.");
-      if (subjects[name]) return alert("Subject already exists!");
-      subjects[name] = { progress: 0, max: max, tasks: [] };
-      saveData();
-      renderDashboard();
-      document.getElementById("subjectName").value = "";
-      document.getElementById("maxRange").value = "";
-    }
-
-    function updateProgress(name) {
-      const input = document.getElementById(`update-${getSafeId(name)}`);
-      if (!input || !subjects[name]) return;
+  // Rebind all button events after re-render
+  document.querySelectorAll(".update-btn").forEach((btn) => {
+    btn.onclick = () => {
+      const name = btn.dataset.name;
+      const input = document.getElementById(`update-${name}`);
       const newValue = parseInt(input.value, 10);
-      if (isNaN(newValue) || newValue < 0 || newValue > subjects[name].max)
+      if (isNaN(newValue) || newValue < 0 || newValue > subjects[name].max) {
         return alert(`Please enter a number between 0 and ${subjects[name].max}`);
+      }
       subjects[name].progress = newValue;
       saveData();
       renderDashboard();
-    }
+    };
+  });
 
-    function removeSubject(name) {
+  document.querySelectorAll(".remove-btn").forEach((btn) => {
+    btn.onclick = () => {
+      const name = btn.dataset.name;
       delete subjects[name];
-      openPanels.delete(name);
       saveData();
       renderDashboard();
-    }
+    };
+  });
 
-    function toggleTasks(name) {
-      const safeId = getSafeId(name);
-      const panel = document.getElementById(`tasks-${safeId}`);
-      const button = document.querySelector(`button[data-subject="${safeId}"]`);
-      if (!panel || !button) return;
-      const isHidden = panel.classList.toggle("hidden");
-      if (isHidden) {
-        openPanels.delete(name);
-        button.textContent = "Show Tasks ▼";
-      } else {
-        openPanels.add(name);
-        button.textContent = "Hide Tasks ▲";
-      }
-    }
+  updateTotalProgress();
+}
 
-    function addTask(name) {
-      const safeId = getSafeId(name);
-      const input = document.getElementById(`task-input-${safeId}`);
-      if (!input) return;
-      const value = input.value.trim();
-      if (!value) return alert("Please enter a task description.");
-      if (!ensureTaskArray(name)) return;
-      subjects[name].tasks.push({ text: value, done: false });
-      input.value = "";
-      openPanels.add(name);
-      saveData();
-      renderDashboard();
-    }
+function addSubject() {
+  const name = document.getElementById("subjectName").value.trim();
+  const max = parseInt(document.getElementById("maxRange").value, 10);
+  if (!name || isNaN(max) || max <= 0) return alert("Please enter a valid name and range.");
+  if (subjects[name]) return alert("Subject already exists!");
+  subjects[name] = { progress: 0, max: max };
+  saveData();
+  renderDashboard();
+  document.getElementById("subjectName").value = "";
+  document.getElementById("maxRange").value = "";
+}
 
-    function toggleTask(name, index) {
-      if (!ensureTaskArray(name)) return;
-      const task = subjects[name].tasks[index];
-      if (!task) return;
-      task.done = !task.done;
-      openPanels.add(name);
-      saveData();
-      renderDashboard();
-    }
+document.addEventListener("DOMContentLoaded", renderDashboard);
+</script>
 
-    function removeTask(name, index) {
-      if (!ensureTaskArray(name)) return;
-      subjects[name].tasks.splice(index, 1);
-      openPanels.add(name);
-      saveData();
-      renderDashboard();
-    }
-
-    document.addEventListener("DOMContentLoaded", renderDashboard);
-  </script>
 </body>
 </html>
