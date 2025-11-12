@@ -172,6 +172,15 @@
   <div class="input-panel">
     <h2 style="color:#38bdf8;">Add Subject</h2>
     <div class="input-row">
+      <select id="subjectPreset" aria-label="Subject presets">
+        <option value="">Choose preset subject</option>
+        <option value="Mathematics" data-max="20">Mathematics</option>
+        <option value="Physics" data-max="18">Physics</option>
+        <option value="Chemistry" data-max="16">Chemistry</option>
+        <option value="Biology" data-max="22">Biology</option>
+        <option value="History" data-max="15">History</option>
+        <option value="Literature" data-max="12">Literature</option>
+      </select>
       <input type="text" id="subjectName" placeholder="Subject name" />
       <input type="number" id="maxRange" placeholder="Max topics (e.g. 13)" min="1" />
       <button onclick="addSubject()">Add</button>
@@ -195,7 +204,30 @@
 
 <script>
 let subjects = JSON.parse(localStorage.getItem("subjects")) || {};
-const openPanels = new Set();
+const subjectPreset = document.getElementById("subjectPreset");
+const subjectNameInput = document.getElementById("subjectName");
+const maxRangeInput = document.getElementById("maxRange");
+
+function flagPresetApplied(field, isApplied) {
+  if (field) {
+    field.dataset.presetApplied = isApplied ? "true" : "false";
+  }
+}
+
+function handleManualInput(event) {
+  flagPresetApplied(event.target, false);
+}
+
+flagPresetApplied(subjectNameInput, false);
+flagPresetApplied(maxRangeInput, false);
+
+if (subjectNameInput) {
+  subjectNameInput.addEventListener("input", handleManualInput);
+}
+
+if (maxRangeInput) {
+  maxRangeInput.addEventListener("input", handleManualInput);
+}
 
 function saveData() {
   localStorage.setItem("subjects", JSON.stringify(subjects));
@@ -245,51 +277,75 @@ function renderDashboard() {
         <div class="progress-fill" style="width:${percentage}%;"></div>
       </div>
       <div class="input-row" style="margin-top:8px;">
-        <input type="number" id="update-${name}" value="${progress}" min="0" max="${max}" />
-        <button class="update-btn" data-name="${name}">Update</button>
-        <button class="remove-btn" data-name="${name}">Remove</button>
+        <input type="number" class="progress-input" value="${progress}" min="0" max="${max}" />
+        <button class="update-btn">Update</button>
+        <button class="remove-btn">Remove</button>
       </div>
     `;
-    dash.appendChild(bar);
-  });
 
-  // Rebind all button events after re-render
-  document.querySelectorAll(".update-btn").forEach((btn) => {
-    btn.onclick = () => {
-      const name = btn.dataset.name;
-      const input = document.getElementById(`update-${name}`);
+    const input = bar.querySelector(".progress-input");
+    const updateBtn = bar.querySelector(".update-btn");
+    const removeBtn = bar.querySelector(".remove-btn");
+
+    updateBtn.addEventListener("click", () => {
       const newValue = parseInt(input.value, 10);
-      if (isNaN(newValue) || newValue < 0 || newValue > subjects[name].max) {
-        return alert(`Please enter a number between 0 and ${subjects[name].max}`);
+      if (isNaN(newValue) || newValue < 0 || newValue > max) {
+        return alert(`Please enter a number between 0 and ${max}`);
       }
       subjects[name].progress = newValue;
       saveData();
       renderDashboard();
-    };
-  });
+    });
 
-  document.querySelectorAll(".remove-btn").forEach((btn) => {
-    btn.onclick = () => {
-      const name = btn.dataset.name;
+    removeBtn.addEventListener("click", () => {
       delete subjects[name];
       saveData();
       renderDashboard();
-    };
+    });
+
+    dash.appendChild(bar);
   });
 
   updateTotalProgress();
 }
 
 function addSubject() {
-  const name = document.getElementById("subjectName").value.trim();
-  const max = parseInt(document.getElementById("maxRange").value, 10);
+  const name = subjectNameInput ? subjectNameInput.value.trim() : "";
+  const max = maxRangeInput ? parseInt(maxRangeInput.value, 10) : NaN;
   if (!name || isNaN(max) || max <= 0) return alert("Please enter a valid name and range.");
   if (subjects[name]) return alert("Subject already exists!");
   subjects[name] = { progress: 0, max: max };
   saveData();
   renderDashboard();
-  document.getElementById("subjectName").value = "";
-  document.getElementById("maxRange").value = "";
+  if (subjectNameInput) {
+    subjectNameInput.value = "";
+    flagPresetApplied(subjectNameInput, false);
+  }
+  if (maxRangeInput) {
+    maxRangeInput.value = "";
+    flagPresetApplied(maxRangeInput, false);
+  }
+  if (subjectPreset) {
+    subjectPreset.value = "";
+  }
+}
+
+if (subjectPreset) {
+  subjectPreset.addEventListener("change", () => {
+    const selected = subjectPreset.selectedOptions[0];
+    if (!selected || !selected.value) {
+      return;
+    }
+    if (subjectNameInput && (!subjectNameInput.value.trim() || subjectNameInput.dataset.presetApplied === "true")) {
+      subjectNameInput.value = selected.value;
+      flagPresetApplied(subjectNameInput, true);
+    }
+    const presetMax = selected.dataset.max;
+    if (maxRangeInput && presetMax && (!maxRangeInput.value || maxRangeInput.dataset.presetApplied === "true")) {
+      maxRangeInput.value = presetMax;
+      flagPresetApplied(maxRangeInput, true);
+    }
+  });
 }
 
 document.addEventListener("DOMContentLoaded", renderDashboard);
