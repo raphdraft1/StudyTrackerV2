@@ -14,156 +14,30 @@
       align-items: center;
       padding: 40px;
     }
-
-    h1 {
-      color: #38bdf8;
-      margin-bottom: 20px;
-    }
-
+    h1 { color: #38bdf8; margin-bottom: 20px; }
     .dashboard, .input-panel {
-      width: 90%;
-      max-width: 700px;
-      background: #1e293b;
-      border-radius: 12px;
-      padding: 20px 30px;
-      margin-bottom: 30px;
+      width: 90%; max-width: 700px;
+      background: #1e293b; border-radius: 12px;
+      padding: 20px 30px; margin-bottom: 30px;
       box-shadow: 0 0 15px rgba(56,189,248,0.2);
     }
-
-    .bar {
-      margin-bottom: 20px;
-    }
-
-    .bar-label {
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      margin-bottom: 6px;
-      font-weight: 600;
-      align-items: center;
-    }
-
-    .subject-meta {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .progress-bar {
-      position: relative;
-      height: 25px;
-      background: #334155;
-      border-radius: 30px;
-      overflow: hidden;
-    }
-
-    .progress-fill {
-      height: 100%;
-      width: 0;
-      background: linear-gradient(90deg, #f87171, #facc15, #4ade80);
-      border-radius: 30px;
-      transition: width 1s ease-in-out;
-    }
-
-    .input-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      align-items: center;
-      margin-bottom: 15px;
-    }
-
+    .bar { margin-bottom: 20px; }
+    .bar-label { display: flex; justify-content: space-between; margin-bottom: 6px; font-weight: 600; }
+    .progress-bar { position: relative; height: 25px; background: #334155; border-radius: 30px; overflow: hidden; }
+    .progress-fill { height: 100%; width: 0; background: linear-gradient(90deg, #f87171, #facc15, #4ade80); border-radius: 30px; transition: width 1s ease-in-out; }
+    .input-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 15px; }
     input, select {
-      background: #334155;
-      border: none;
-      color: #e2e8f0;
-      padding: 6px 10px;
-      border-radius: 6px;
+      background: #334155; border: none; color: #e2e8f0;
+      padding: 6px 10px; border-radius: 6px;
     }
-
     button {
-      background: #38bdf8;
-      border: none;
-      color: #0f172a;
-      padding: 6px 14px;
-      border-radius: 6px;
-      cursor: pointer;
+      background: #38bdf8; border: none; color: #0f172a;
+      padding: 6px 14px; border-radius: 6px; cursor: pointer;
       transition: 0.2s;
     }
-
-    button:hover {
-      background: #0ea5e9;
-    }
-
-    .remove-btn {
-      background: #ef4444;
-      color: white;
-      padding: 4px 10px;
-    }
-
-    .remove-btn:hover {
-      background: #dc2626;
-    }
-
-    .toggle-btn {
-      background: rgba(56, 189, 248, 0.2);
-      color: #38bdf8;
-      border: 1px solid rgba(56, 189, 248, 0.4);
-      padding: 4px 12px;
-    }
-
-    .toggle-btn:hover {
-      background: rgba(14, 165, 233, 0.3);
-    }
-
-    .tasks-panel {
-      background: #0f172a;
-      border-radius: 10px;
-      padding: 15px;
-      margin-top: 12px;
-      border: 1px solid rgba(148, 163, 184, 0.2);
-    }
-
-    .hidden {
-      display: none;
-    }
-
-    .task-list {
-      list-style: none;
-      padding: 0;
-      margin: 0 0 12px 0;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .task-item {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex: 1;
-    }
-
-    .task-text {
-      flex: 1;
-    }
-
-    .task-text.completed {
-      text-decoration: line-through;
-      color: #94a3b8;
-    }
-
-    .task-empty {
-      opacity: 0.7;
-      font-style: italic;
-    }
-
-    .task-actions {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
+    button:hover { background: #0ea5e9; }
+    .remove-btn { background: #ef4444; color: white; padding: 4px 10px; }
+    .remove-btn:hover { background: #dc2626; }
   </style>
 </head>
 <body>
@@ -172,15 +46,6 @@
   <div class="input-panel">
     <h2 style="color:#38bdf8;">Add Subject</h2>
     <div class="input-row">
-      <select id="subjectPreset" aria-label="Subject presets">
-        <option value="">Choose preset subject</option>
-        <option value="Mathematics" data-max="20">Mathematics</option>
-        <option value="Physics" data-max="18">Physics</option>
-        <option value="Chemistry" data-max="16">Chemistry</option>
-        <option value="Biology" data-max="22">Biology</option>
-        <option value="History" data-max="15">History</option>
-        <option value="Literature" data-max="12">Literature</option>
-      </select>
       <input type="text" id="subjectName" placeholder="Subject name" />
       <input type="number" id="maxRange" placeholder="Max topics (e.g. 13)" min="1" />
       <button onclick="addSubject()">Add</button>
@@ -188,168 +53,115 @@
   </div>
 
   <div id="total-container" class="dashboard" style="margin-bottom:20px;">
-    <h2 style="color:#38bdf8;">📊 Total Progress</h2>
-    <div class="bar">
-      <div class="bar-label">
-        <span>Overall Study Progress</span>
-        <span id="total-label">0/0 (0%)</span>
-      </div>
-      <div class="progress-bar">
-        <div id="total-progress" class="progress-fill"></div>
-      </div>
+  <h2 style="color:#38bdf8;">📊 Total Progress</h2>
+  <div class="bar">
+    <div class="bar-label">
+      <span>Overall Study Progress</span>
+      <span id="total-label">0/0 (0%)</span>
+    </div>
+    <div class="progress-bar">
+      <div id="total-progress" class="progress-fill"></div>
     </div>
   </div>
+</div>
 
+  
   <div id="dashboard" class="dashboard"></div>
 
-<script>
-let subjects = JSON.parse(localStorage.getItem("subjects")) || {};
-const subjectPreset = document.getElementById("subjectPreset");
-const subjectNameInput = document.getElementById("subjectName");
-const maxRangeInput = document.getElementById("maxRange");
+  <script>
+    let subjects = JSON.parse(localStorage.getItem("subjects")) || {};
 
-function flagPresetApplied(field, isApplied) {
-  if (field) {
-    field.dataset.presetApplied = isApplied ? "true" : "false";
-  }
-}
+    function saveData() {
+      localStorage.setItem("subjects", JSON.stringify(subjects));
+    }
 
-function handleManualInput(event) {
-  flagPresetApplied(event.target, false);
-}
+    function renderDashboard() {
+      const dash = document.getElementById("dashboard");
+      dash.innerHTML = "";
 
-flagPresetApplied(subjectNameInput, false);
-flagPresetApplied(maxRangeInput, false);
-
-if (subjectNameInput) {
-  subjectNameInput.addEventListener("input", handleManualInput);
-}
-
-if (maxRangeInput) {
-  maxRangeInput.addEventListener("input", handleManualInput);
-}
-
-function saveData() {
-  localStorage.setItem("subjects", JSON.stringify(subjects));
-}
-
-function updateTotalProgress() {
-  const totalLabel = document.getElementById("total-label");
-  const totalFill = document.getElementById("total-progress");
-  const totalSubjects = Object.keys(subjects).length;
-  if (totalSubjects === 0) {
-    totalLabel.textContent = "0/0 (0%)";
-    totalFill.style.width = "0%";
-    return;
-  }
-  let totalProgress = 0, totalMax = 0;
-  Object.values(subjects).forEach((s) => {
-    totalProgress += s.progress;
-    totalMax += s.max;
-  });
-  const percentage = totalMax > 0 ? (totalProgress / totalMax) * 100 : 0;
-  totalLabel.textContent = `${totalProgress}/${totalMax} (${percentage.toFixed(1)}%)`;
-  totalFill.style.width = `${percentage}%`;
-}
-
-function renderDashboard() {
-  const dash = document.getElementById("dashboard");
-  dash.innerHTML = "";
-
-  if (Object.keys(subjects).length === 0) {
-    dash.innerHTML = "<p style='text-align:center;opacity:0.8;'>No subjects yet. Add one above!</p>";
-    updateTotalProgress();
-    return;
-  }
-
-  Object.entries(subjects).forEach(([name, val]) => {
-    const { progress, max } = val;
-    const percentage = max > 0 ? (progress / max) * 100 : 0;
-
-    const bar = document.createElement("div");
-    bar.className = "bar";
-    bar.innerHTML = `
-      <div class="bar-label">
-        <span>${name}</span>
-        <span>${progress}/${max} (${percentage.toFixed(1)}%)</span>
-      </div>
-      <div class="progress-bar">
-        <div class="progress-fill" style="width:${percentage}%;"></div>
-      </div>
-      <div class="input-row" style="margin-top:8px;">
-        <input type="number" class="progress-input" value="${progress}" min="0" max="${max}" />
-        <button class="update-btn">Update</button>
-        <button class="remove-btn">Remove</button>
-      </div>
-    `;
-
-    const input = bar.querySelector(".progress-input");
-    const updateBtn = bar.querySelector(".update-btn");
-    const removeBtn = bar.querySelector(".remove-btn");
-
-    updateBtn.addEventListener("click", () => {
-      const newValue = parseInt(input.value, 10);
-      if (isNaN(newValue) || newValue < 0 || newValue > max) {
-        return alert(`Please enter a number between 0 and ${max}`);
+      if (Object.keys(subjects).length === 0) {
+        dash.innerHTML = "<p style='text-align:center;opacity:0.8;'>No subjects yet. Add one above!</p>";
+        return;
       }
+
+      function updateTotalProgress() {
+        const totalLabel = document.getElementById("total-label");
+        const totalFill = document.getElementById("total-progress");
+      
+        const totalSubjects = Object.keys(subjects).length;
+        if (totalSubjects === 0) {
+          totalLabel.textContent = "0/0 (0%)";
+          totalFill.style.width = "0%";
+          return;
+        }
+      
+        let totalProgress = 0;
+        let totalMax = 0;
+      
+        Object.values(subjects).forEach(s => {
+          totalProgress += s.progress;
+          totalMax += s.max;
+        });
+      
+        const percentage = totalMax > 0 ? (totalProgress / totalMax) * 100 : 0;
+        totalLabel.textContent = `${totalProgress}/${totalMax} (${percentage.toFixed(1)}%)`;
+        totalFill.style.width = `${percentage}%`;
+      }
+
+
+      Object.entries(subjects).forEach(([key, val]) => {
+        const { progress, max } = val;
+        const percentage = (progress / max) * 100;
+        const bar = document.createElement("div");
+        bar.className = "bar";
+        bar.innerHTML = `
+          <div class="bar-label">
+            <span>${key}</span>
+            <span>${progress}/${max} (${percentage.toFixed(1)}%)</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width:${percentage}%;"></div>
+          </div>
+          <div class="input-row" style="margin-top:8px;">
+            <input type="number" id="update-${key}" value="${progress}" min="0" max="${max}" />
+            <button onclick="updateProgress('${key}')">Update</button>
+            <button class="remove-btn" onclick="removeSubject('${key}')">Remove</button>
+          </div>
+        `;
+        dash.appendChild(bar);
+      });
+      updateTotalProgress();
+    }
+
+    function addSubject() {
+      const name = document.getElementById("subjectName").value.trim();
+      const max = parseInt(document.getElementById("maxRange").value);
+      if (!name || isNaN(max) || max <= 0) return alert("Please enter a valid name and range.");
+      if (subjects[name]) return alert("Subject already exists!");
+      subjects[name] = { progress: 0, max: max };
+      saveData();
+      renderDashboard();
+      document.getElementById("subjectName").value = "";
+      document.getElementById("maxRange").value = "";
+    }
+
+    function updateProgress(name) {
+      const newValue = parseInt(document.getElementById(`update-${name}`).value);
+      if (isNaN(newValue) || newValue < 0 || newValue > subjects[name].max)
+        return alert(`Please enter a number between 0 and ${subjects[name].max}`);
       subjects[name].progress = newValue;
       saveData();
       renderDashboard();
-    });
+    }
 
-    removeBtn.addEventListener("click", () => {
+    function removeSubject(name) {
       delete subjects[name];
       saveData();
       renderDashboard();
-    });
-
-    dash.appendChild(bar);
-  });
-
-  updateTotalProgress();
-}
-
-function addSubject() {
-  const name = subjectNameInput ? subjectNameInput.value.trim() : "";
-  const max = maxRangeInput ? parseInt(maxRangeInput.value, 10) : NaN;
-  if (!name || isNaN(max) || max <= 0) return alert("Please enter a valid name and range.");
-  if (subjects[name]) return alert("Subject already exists!");
-  subjects[name] = { progress: 0, max: max };
-  saveData();
-  renderDashboard();
-  if (subjectNameInput) {
-    subjectNameInput.value = "";
-    flagPresetApplied(subjectNameInput, false);
-  }
-  if (maxRangeInput) {
-    maxRangeInput.value = "";
-    flagPresetApplied(maxRangeInput, false);
-  }
-  if (subjectPreset) {
-    subjectPreset.value = "";
-  }
-}
-
-if (subjectPreset) {
-  subjectPreset.addEventListener("change", () => {
-    const selected = subjectPreset.selectedOptions[0];
-    if (!selected || !selected.value) {
-      return;
     }
-    if (subjectNameInput && (!subjectNameInput.value.trim() || subjectNameInput.dataset.presetApplied === "true")) {
-      subjectNameInput.value = selected.value;
-      flagPresetApplied(subjectNameInput, true);
-    }
-    const presetMax = selected.dataset.max;
-    if (maxRangeInput && presetMax && (!maxRangeInput.value || maxRangeInput.dataset.presetApplied === "true")) {
-      maxRangeInput.value = presetMax;
-      flagPresetApplied(maxRangeInput, true);
-    }
-  });
-}
 
-document.addEventListener("DOMContentLoaded", renderDashboard);
-</script>
-
+    // Initialize on load
+    document.addEventListener("DOMContentLoaded", renderDashboard);
+  </script>
 </body>
 </html>
